@@ -35,4 +35,10 @@ router.post('/reset-password/:token', function(req,res) {
     userController.resetPassword(req, res);
 });
 
+// Route for user profile update
+router.post('/updateUserProfile', function(req,res) {
+    // console.log('update');
+    userController.updateUserProfile(req, res);
+});
+
 module.exports = router;

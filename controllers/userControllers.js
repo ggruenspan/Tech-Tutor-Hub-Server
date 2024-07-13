@@ -66,6 +66,7 @@ function signUp(req, res) {
 
 // Controller function for user sign-in
 function signIn(req, res) {
+
     // console.log('signIn', req.body);
     try {
         const { email, password } = req.body;
@@ -87,17 +88,22 @@ function signIn(req, res) {
                         userName: user.userName,
                         password: user.password,
                         email: user.email.address,
+                        // avatar: user.profile.avatar,
                         firstName: user.profile.firstName,
                         lastName: user.profile.lastName,
-                        phone: user.profile.phone,
-                        dof: user.profile.dof,
+                        phoneNumber: user.profile.phoneNumber,
+                        dateOfBirth: user.profile.dateOfBirth,
+                        country: user.profile.address.country,
+                        stateprovince: user.profile.address.stateProvince,
+                        city: user.profile.address.city,
+                        bio: user.profile.bio,
+                        pronouns: user.profile.pronouns
                     }
 
                     // Update user's login history and generate JWT token
                     user.loginHistory.push({dateTime: new Date(), userAgent: req.get('User-Agent')});
                     user.updateOne({ $set: { loginHistory: user.loginHistory}})
 
-                    // console.log(user);
                     .then(() => {
                         jwtSign(payload)
                         .then((token) => {
@@ -164,7 +170,7 @@ function forgotPassword(req, res) {
                 message = `
                     <p>You are receiving this because you (or someone else) has requested the reset of the password for your account.</p>
                     <p>Please click on the following link, or paste this into your browser to complete the process:</p>
-                    <p><a href="https://localhost:4200/reset-password/${resetToken}">Reset Password Link</a></p>
+                    <p><a href="https://localhost:4200/reset-password/${resetToken}">Reset Password</a></p>
                     <p>This link is valid for 30 minutes. If you do not reset your password within this time, you will need to request another reset link.</p>
                     <p>If you did not request this, please ignore this email, and your password will remain unchanged.</p>
                 `
@@ -240,6 +246,80 @@ function resetPassword(req, res) {
     }
 }
 
+// Function to update users profile
+function updateUserProfile (req, res) {
+    // console.log('updateUserProfile', req.body);
+
+    try {
+        const { oldEmail, firstName, lastName, newEmail, phoneNumber, dateOfBirth, country, stateprovince, city, bio, pronouns } = req.body;
+
+        // Prepare the update object
+        const update = {};
+        if (firstName) update['profile.firstName'] = firstName;
+        if (lastName) update['profile.lastName'] = lastName;
+        if (newEmail) update['email.address'] = newEmail;
+        if (phoneNumber) update['profile.phoneNumber'] = phoneNumber;
+        if (dateOfBirth) update['profile.dateOfBirth'] = dateOfBirth;
+        if (country) update['profile.address.country'] = country;
+        if (stateprovince) update['profile.address.stateProvince'] = stateprovince;
+        if (city) update['profile.address.city'] = city;
+        if (bio) update['profile.bio'] = bio;
+        if (pronouns) update['profile.pronouns'] = pronouns;
+        
+        // Check if there are any fields to update
+        if (Object.keys(update).length === 0) {
+            return res.status(400).json({ message: 'No changes detected in user profile' });
+        }
+
+        // Find the user by their old email address and update their profile
+        User.findOneAndUpdate(
+            { "email.address": oldEmail },
+            { $set: update },
+            { new: true, runValidators: true } // Return the updated document and run schema validators
+        )
+        .then((user) => {
+            if (!user) {
+                return res.status(404).json({ message: 'User not found with email: ' + oldEmail });
+            }
+
+            // Create a new payload with updated user information
+            const payload = {
+                id: user.id,
+                role: user.role,
+                userName: user.userName,
+                email: user.email.address,
+                // avatar: user.profile.avatar,
+                firstName: user.profile.firstName,
+                lastName: user.profile.lastName,
+                phoneNumber: user.profile.phoneNumber,
+                dateOfBirth: user.profile.dateOfBirth,
+                country: user.profile.address.country,
+                stateprovince: user.profile.address.stateProvince,
+                city: user.profile.address.city,
+                bio: user.profile.bio,
+                pronouns: user.profile.pronouns
+            };
+
+            // Generate a new JWT token
+            jwtSign(payload)
+            .then((token) => {
+                res.status(200).json({ message: 'User profile updated successfully', token: token });
+            })
+            .catch((err) => {
+                console.error(err);
+                return res.status(500).json({ message: 'An error occurred while generating the token' });
+            });
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).json({ message: 'An error occurred while updating user profile' });
+        });
+    } catch (err) {
+        // console.error(error);
+        res.status(500).json({ message: 'Internal server error. Please try again' });
+    }
+}
+
 // Function to send a verification email
 function sendEmail(res, email, subject, message, resMessage) {
     const transporter = nodemailer.createTransport({
@@ -260,7 +340,7 @@ function sendEmail(res, email, subject, message, resMessage) {
     
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            // console.error(error);
+            console.error(error);
             return res.status(500).json({ message: 'An error occurred while sending the email' });
         }
         return res.status(200).json({ message: resMessage });
@@ -272,5 +352,6 @@ module.exports = {
     signUp,
     signIn,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    updateUserProfile
 }

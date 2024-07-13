@@ -15,19 +15,18 @@ const User = mongoose.model(
             validated: {type: Boolean, default: false}
         },
         profile: {
+            avatar: String,
             firstName: String,
             lastName: String,
-            avatar: String,
-            bio: String,
-            phone: String,
-            dof: String,
+            phoneNumber: String,
+            dateOfBirth: Date,
             address: {
-                street1: String,
-                city: String,
-                state: String,
                 country: String,
-                areaCode: String,
-            }
+                stateProvince: String,
+                city: String,
+            }, 
+            bio: String,
+            pronouns: String,
         },
         tutor: {
             type: mongoose.Schema.Types.ObjectId,

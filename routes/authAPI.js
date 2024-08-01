@@ -1,8 +1,35 @@
 // routes/userAPI.js
 
 const express = require('express');
-const passport = require('passport')
+const userController = require('../controllers/authControllers.js');
 const router = express.Router();
+const passport = require('passport')
+
+// Route for user sign-up
+router.post('/sign-up', (req,res) => {
+    userController.signUp(req, res);
+});
+
+// Route for user sign-in
+router.post('/sign-in', (req, res) => {
+    userController.signIn(req, res);
+});
+
+// Route for user sign-out
+router.get('/sign-out', (req, res) => {
+    res.clearCookie('token');
+    res.status(200).json({ message: 'Sign out successfully' });
+});
+
+// Route for user forgot-password
+router.post('/forgot-password', function(req,res) {
+    userController.forgotPassword(req, res);
+});
+
+// Route for user reset-password
+router.post('/reset-password/:token', function(req,res) {
+    userController.resetPassword(req, res);
+});
 
 // Route for user authentication using JWT
 router.get('/authenticate', (req, res, next) => {

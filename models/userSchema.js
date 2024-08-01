@@ -15,6 +15,7 @@ const User = mongoose.model(
             validated: {type: Boolean, default: false}
         },
         profile: {
+            completed: {type: Boolean, default: false},
             avatar: String,
             firstName: String,
             lastName: String,
@@ -28,10 +29,10 @@ const User = mongoose.model(
             bio: String,
             pronouns: String,
         },
-        tutor: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Tutor"
-        },
+        // tutor: {
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: "Tutor"
+        // },
         loginHistory: [{
             _id: false,
             dateTime: Date,

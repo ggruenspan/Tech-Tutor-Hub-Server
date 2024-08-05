@@ -16,7 +16,7 @@ const User = mongoose.model(
         },
         profile: {
             completed: {type: Boolean, default: false},
-            avatar: String,
+            avatar: { type: mongoose.Schema.Types.ObjectId, ref: 'Images' },
             firstName: String,
             lastName: String,
             phoneNumber: String,
@@ -29,10 +29,6 @@ const User = mongoose.model(
             bio: String,
             pronouns: String,
         },
-        // tutor: {
-        //     type: mongoose.Schema.Types.ObjectId,
-        //     ref: "Tutor"
-        // },
         loginHistory: [{
             _id: false,
             dateTime: Date,

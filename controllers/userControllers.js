@@ -1,7 +1,8 @@
 // controllers/userControllers.js
 
-// User model (Mongoose schema)
+// User & Image models (Mongoose schema)
 const User = require('../models/userSchema.js');
+const Image = require('../models/imageSchema.js');
 
 const { jwtSign } = require('../config/jwtConfig.js');
 
@@ -97,13 +98,38 @@ function updateUserProfile (req, res) {
        })
 
     } catch(err) {
-        console.log(err);
         return res.status(500).json({ message: 'Internal server error. Please try again' });
     }
 }
 
+// Function to update users profile picture
+function uploadProfilePicture(req, res, next) {
+    try {
+        let newImage = new Image({
+            fieldname: req.file.fieldname,
+            originalname: req.file.originalname,
+            desc: 'UserPicture',
+            img: {
+                data: req.file.buffer,
+                contentType: req.file.mimetype
+            }
+        });
+
+        // Create a new iamge
+        newImage.save()
+        .then(() => {
+            res.status(200).json({ message: 'Profile image uploaded successfully!'});
+        })
+        .catch(err => {
+            res.status(500).send("Error uploading image");
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Internal server error. Please try again' });
+    }  
+}
 
 // Export the controller functions
 module.exports = {
-    updateUserProfile
+    updateUserProfile,
+    uploadProfilePicture
 }

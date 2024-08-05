@@ -22,12 +22,12 @@ router.get('/sign-out', (req, res) => {
 });
 
 // Route for user forgot-password
-router.post('/forgot-password', function(req,res) {
+router.post('/forgot-password', (req,res) => {
     userController.forgotPassword(req, res);
 });
 
 // Route for user reset-password
-router.post('/reset-password/:token', function(req,res) {
+router.post('/reset-password/:token', (req,res) => {
     userController.resetPassword(req, res);
 });
 

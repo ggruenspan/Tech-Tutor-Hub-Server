@@ -6,6 +6,56 @@ const Image = require('../models/imageSchema.js');
 
 const { jwtSign } = require('../config/jwtConfig.js');
 
+function getUserProfile (req, res, message) {
+    try {
+        const { email } = req.user;
+        // Find the user with the given email
+        User.findOne({ "email.address" : email, })
+        .then((user) => {
+            if (!user) {
+                return res.status(404).json({ message: 'Unable to find user with email: ' + email });
+            }
+
+            const payload = {
+                id: user.id,
+                role: user.role,
+                access: user.access,
+                userName: user.userName,
+                email: user.email.address,
+                avatar: user.profile.avatar,
+                firstName: user.profile.firstName,
+                lastName: user.profile.lastName,
+                phoneNumber: user.profile.phoneNumber,
+                dateOfBirth: user.profile.dateOfBirth,
+                country: user.profile.address.country,
+                stateProvince: user.profile.address.stateProvince,
+                city: user.profile.address.city,
+                bio: user.profile.bio,
+                pronouns: user.profile.pronouns
+            }
+
+            jwtSign(payload)
+            .then((token) => {
+                if(message === '') {
+                    res.status(200).json({ message: 'User profile retrieved successfully', token: token });
+                } else {
+                    // Display custom message
+                    res.status(200).json({ message: message, token: token });
+                }
+            })
+            .catch((err) => {
+                return res.status(500).json({ message: 'An error occurred while generating the token' });
+            })
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).json({ message: 'Internal server error. Please try again' });
+        })
+    } catch (err) {
+        res.status(500).json({ message: 'Internal server error. Please try again' });
+    }
+}
+
 // Function to update users profile
 function updateUserProfile (req, res) {
     try {
@@ -15,8 +65,8 @@ function updateUserProfile (req, res) {
         User.findOne({ "email.address" : newEmail })
        .then((user) => {
             if(user && user.email.address !== oldEmail) {
-                    // If user with newEmail already exists and it's not the current user, send an error message
-                    return res.status(400).json({ message: 'Email already in use. Please use a different email.' });
+                // If user with newEmail already exists and it's not the current user, send an error message
+                return res.status(400).json({ message: 'Email already in use. Please use a different email.' });
             }
             else {
                 const userName = (firstName.split(" ")[0].charAt(0).toUpperCase() + firstName.split(" ")[0].slice(1)) + "." + lastName.charAt(0).toUpperCase();
@@ -62,31 +112,9 @@ function updateUserProfile (req, res) {
                         return res.status(200).json({ message: 'No changes detected.' });
                     }
 
-                    // Create a new payload with updated user information
-                    const payload = {
-                        id: user.id,
-                        role: user.role,
-                        userName: user.userName,
-                        email: user.email.address,
-                        firstName: user.profile.firstName,
-                        lastName: user.profile.lastName,
-                        phoneNumber: user.profile.phoneNumber,
-                        dateOfBirth: user.profile.dateOfBirth,
-                        country: user.profile.address.country,
-                        stateProvince: user.profile.address.stateProvince,
-                        city: user.profile.address.city,
-                        bio: user.profile.bio,
-                        pronouns: user.profile.pronouns
-                    };
-
-                    // Generate a new JWT token
-                    jwtSign(payload)
-                    .then((token) => {
-                        res.status(200).json({ message: 'User profile updated successfully', token: token });
-                    })
-                    .catch((err) => {
-                        return res.status(500).json({ message: 'An error occurred while generating the token' });
-                    });
+                    // If update is successful, call getUserProfile
+                    req.user = { email: user.email.address };
+                    getUserProfile(req, res, 'User profile updated successfully');
                 })
                 .catch((err) => {
                     res.status(500).json({ message: 'An error occurred while updating user profile' });
@@ -130,6 +158,7 @@ function uploadProfilePicture(req, res, next) {
 
 // Export the controller functions
 module.exports = {
+    getUserProfile,
     updateUserProfile,
     uploadProfilePicture
 }

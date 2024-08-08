@@ -56,7 +56,7 @@ function signUp(req, res) {
         .catch((err) => {
             return res.status(500).json({ message: 'An error occurred while signing up. Please try again' });
         })
-    } catch (error) {
+    } catch (err) {
         res.status(500).json({ message: 'Internal server error. Please try again' });
     }
 };
@@ -83,16 +83,7 @@ function signIn(req, res) {
                         access: user.access,
                         userName: user.userName,
                         email: user.email.address,
-                        // avatar: user.profile.avatar,
-                        firstName: user.profile.firstName,
-                        lastName: user.profile.lastName,
-                        phoneNumber: user.profile.phoneNumber,
-                        dateOfBirth: user.profile.dateOfBirth,
-                        country: user.profile.address.country,
-                        stateProvince: user.profile.address.stateProvince,
-                        city: user.profile.address.city,
-                        bio: user.profile.bio,
-                        pronouns: user.profile.pronouns
+                        avatar: user.profile.avatar,
                     }
 
                     // Update user's login history and generate JWT token
@@ -122,7 +113,7 @@ function signIn(req, res) {
         .catch((err) => {
             return res.status(500).json({ message: 'An error occurred while signing in. Please try again' });
         })
-    } catch (error) {
+    } catch (err) {
         res.status(500).json({ message: 'Internal server error. Please try again' });
     }
 };

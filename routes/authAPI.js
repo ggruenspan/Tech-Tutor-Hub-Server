@@ -3,7 +3,6 @@
 const express = require('express');
 const userController = require('../controllers/authControllers.js');
 const router = express.Router();
-const passport = require('passport')
 
 // Route for user sign-up
 router.post('/sign-up', (req,res) => {
@@ -14,7 +13,6 @@ router.post('/sign-up', (req,res) => {
 router.post('/sign-in', (req, res) => {
     userController.signIn(req, res);
 });
-
 
 // Route for user forgot-password
 router.post('/forgot-password', (req,res) => {

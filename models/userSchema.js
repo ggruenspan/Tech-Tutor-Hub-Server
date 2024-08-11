@@ -16,7 +16,7 @@ const User = mongoose.model(
         },
         profile: {
             completed: {type: Boolean, default: false},
-            avatar: { type: mongoose.Schema.Types.ObjectId, ref: 'Images' },
+            profileImage: { type: String, ref: 'Images' },
             firstName: String,
             lastName: String,
             phoneNumber: String,

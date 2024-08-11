@@ -5,10 +5,11 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { v4: uuidv4 } = require('uuid');
 
-// User model (Mongoose schema)
+// User & Image models (Mongoose schema)
 const User = require('../models/userSchema.js');
+const Image = require('../models/imageSchema.js');
 
-const emailContorller = require('./emailContorller.js');
+const emailController = require('./emailController.js');
 
 const { jwtSign } = require('../config/jwtConfig.js');
 
@@ -77,31 +78,52 @@ function signIn(req, res) {
             bcrypt.compare(password, user.password)
             .then((result) => {
                 if (result === true) {
-                    const payload = {
-                        id: user.id,
-                        role: user.role,
-                        access: user.access,
-                        userName: user.userName,
-                        email: user.email.address,
-                        avatar: user.profile.avatar,
-                    }
+                    Image.findById(user.profile.profileImage)
+                    .then((image) => {
+                        if (!image) {
+                            return res.status(404).json({ message: 'Image not found' });
+                        }
+            
+                        // Ensure the requesting user is authorized to access the image
+                        if (image.user !== user.id) {
+                            return res.status(403).json({ message: 'Forbidden' });
+                        }
+            
+                        const payload = {
+                            id: user.id,
+                            role: user.role,
+                            access: user.access,
+                            userName: user.userName,
+                            email: user.email.address,
+                        }
 
-                    // Update user's login history and generate JWT token
-                    user.loginHistory.push({dateTime: new Date(), userAgent: req.get('User-Agent')});
-                    user.updateOne({ $set: { loginHistory: user.loginHistory}})
+                        // Update user's login history and generate JWT token
+                        user.loginHistory.push({dateTime: new Date(), userAgent: req.get('User-Agent')});
+                        user.updateOne({ $set: { loginHistory: user.loginHistory}})
 
-                    .then(() => {
-                        jwtSign(payload)
-                        .then((token) => {
-                            res.status(200).json({ message: 'User signed in successfully', token: token});
+                        .then(() => {
+                            jwtSign(payload)
+                            .then((token) => {
+                                res.status(200).json({
+                                    message: 'User signed in successfully',
+                                    token: token,
+                                    image: {
+                                        data: image.img.data.toString('base64'), // Encode image data to Base64
+                                        contentType: image.img.contentType
+                                    }
+                                });
+                            })
+                            .catch((err) => {
+                                return res.status(500).json({ message: 'An error occurred while signing in. Please try again' })
+                            })
                         })
                         .catch((err) => {
-                            return res.status(500).json('An error occurred while signing in. Please try again');
+                            return res.status(500).json({ message: 'An error occurred while signing in. Please try again' });
                         })
                     })
-                    .catch((err) => {
-                        return res.status(500).json({ message: 'An error occurred while signing in. Please try again' });
-                    })
+                    .catch(err => {
+                        res.status(500).json({ message: 'Internal server error' });
+                    });
                 } else {
                     return res.status(400).json({ message: 'Invalid username or password' });
                 }
@@ -149,7 +171,7 @@ function forgotPassword(req, res) {
                     <p>This link is valid for 30 minutes. If you do not reset your password within this time, you will need to request another reset link.</p>
                     <p>If you did not request this, please ignore this email, and your password will remain unchanged.</p>
                 `
-                emailContorller.sendEmail(res, email, subject, message, 'Password reset email sent');
+                emailController.sendEmail(res, email, subject, message, 'Password reset email sent');
             })
             .catch(err => {
                 return res.status(500).json({ message: 'An error occurred while saving the reset token' });  

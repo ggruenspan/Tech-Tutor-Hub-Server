@@ -6,6 +6,7 @@ const Image = require('../models/imageSchema.js');
 
 const { jwtSign } = require('../config/jwtConfig.js');
 
+// Function to get the users profile
 function getUserProfile (req, res, message) {
     try {
         const { email } = req.user;
@@ -22,7 +23,6 @@ function getUserProfile (req, res, message) {
                 access: user.access,
                 userName: user.userName,
                 email: user.email.address,
-                avatar: user.profile.avatar,
                 firstName: user.profile.firstName,
                 lastName: user.profile.lastName,
                 phoneNumber: user.profile.phoneNumber,
@@ -48,7 +48,6 @@ function getUserProfile (req, res, message) {
             })
         })
         .catch((err) => {
-            console.error(err);
             res.status(500).json({ message: 'Internal server error. Please try again' });
         })
     } catch (err) {
@@ -131,33 +130,59 @@ function updateUserProfile (req, res) {
 }
 
 // Function to update users profile picture
-function uploadProfilePicture(req, res, next) {
+function uploadProfilePicture(req, res) {
     try {
-        let newImage = new Image({
-            fieldname: req.file.fieldname,
-            originalname: req.file.originalname,
-            desc: 'UserPicture',
-            img: {
-                data: req.file.buffer,
-                contentType: req.file.mimetype
+        User.findById(req.user.id).exec()
+        .then(user => {
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
             }
-        });
 
-        // Create a new iamge
-        newImage.save()
+            const currentProfileImageId = user.profile.profileImage;
+            if (currentProfileImageId ) {
+                return Image.findByIdAndDelete(currentProfileImageId ).exec();
+            }
+
+            return Promise.resolve();
+        })
         .then(() => {
-            res.status(200).json({ message: 'Profile image uploaded successfully!'});
+            let newImage = new Image({
+                user: req.user.id,
+                desc: 'UserPicture',
+                img: {
+                    data: req.file.buffer,
+                    contentType: req.file.mimetype
+                }
+            });
+
+            // Save the new image
+            return newImage.save();
+        })
+        .then((savedImage) => {
+            User.findByIdAndUpdate(
+                req.user.id,
+                { 'profile.profileImage': savedImage.id },
+                { new: true }
+            ).exec();
+
+            // console.log(savedImage.img.contentType);
+            res.status(200).json({ message: 'Profile image uploaded and updated successfully!',
+                image: {
+                    data: savedImage.img.data.toString('base64'), // Encode image data to Base64
+                    contentType: savedImage.img.contentType
+                }
+             });
         })
         .catch(err => {
-            res.status(500).send("Error uploading image");
+            res.status(500).json({ error: 'Internal server error. Please try again' });
         });
-    } catch (err) {
-        res.status(500).json({ error: 'Internal server error. Please try again' });
-    }  
+    } catch(err) {
+        return res.status(500).json({ message: 'Internal server error. Please try again' });
+    }
 }
 
 // Export the controller functions
-module.exports = {
+module.exports = { 
     getUserProfile,
     updateUserProfile,
     uploadProfilePicture

@@ -29,8 +29,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // API routes
-app.use('/',  require('./routes/userAPI'));
-app.use('/',  require('./routes/authAPI'));
+app.use('/', require('./routes/imageAPI'));
+app.use('/', require('./routes/userAPI'));
+app.use('/', require('./routes/authAPI'));
 
 // Start the server
 app.listen(process.env.PORT, () => {

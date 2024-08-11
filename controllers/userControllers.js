@@ -132,8 +132,11 @@ function updateUserProfile (req, res) {
 // Function to update users profile picture
 function uploadProfilePicture(req, res) {
     try {
-        User.findById(req.user.id).exec()
-        .then(user => {
+        const { email } = req.user;
+
+        // Find the user with the given email
+        User.findOne({ "email.address" : email, })
+        .then((user) => {
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
@@ -165,13 +168,7 @@ function uploadProfilePicture(req, res) {
                 { new: true }
             ).exec();
 
-            // console.log(savedImage.img.contentType);
-            res.status(200).json({ message: 'Profile image uploaded and updated successfully!',
-                image: {
-                    data: savedImage.img.data.toString('base64'), // Encode image data to Base64
-                    contentType: savedImage.img.contentType
-                }
-             });
+            res.status(200).json({ message: 'Profile image uploaded successfully!' });
         })
         .catch(err => {
             res.status(500).json({ error: 'Internal server error. Please try again' });

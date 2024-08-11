@@ -78,52 +78,31 @@ function signIn(req, res) {
             bcrypt.compare(password, user.password)
             .then((result) => {
                 if (result === true) {
-                    Image.findById(user.profile.profileImage)
-                    .then((image) => {
-                        if (!image) {
-                            return res.status(404).json({ message: 'Image not found' });
-                        }
-            
-                        // Ensure the requesting user is authorized to access the image
-                        if (image.user !== user.id) {
-                            return res.status(403).json({ message: 'Forbidden' });
-                        }
-            
-                        const payload = {
-                            id: user.id,
-                            role: user.role,
-                            access: user.access,
-                            userName: user.userName,
-                            email: user.email.address,
-                        }
+                    const payload = {
+                        id: user.id,
+                        role: user.role,
+                        access: user.access,
+                        userName: user.userName,
+                        email: user.email.address,
+                        avatar: user.profile.avatar,
+                    }
 
-                        // Update user's login history and generate JWT token
-                        user.loginHistory.push({dateTime: new Date(), userAgent: req.get('User-Agent')});
-                        user.updateOne({ $set: { loginHistory: user.loginHistory}})
+                    // Update user's login history and generate JWT token
+                    user.loginHistory.push({dateTime: new Date(), userAgent: req.get('User-Agent')});
+                    user.updateOne({ $set: { loginHistory: user.loginHistory}})
 
-                        .then(() => {
-                            jwtSign(payload)
-                            .then((token) => {
-                                res.status(200).json({
-                                    message: 'User signed in successfully',
-                                    token: token,
-                                    image: {
-                                        data: image.img.data.toString('base64'), // Encode image data to Base64
-                                        contentType: image.img.contentType
-                                    }
-                                });
-                            })
-                            .catch((err) => {
-                                return res.status(500).json({ message: 'An error occurred while signing in. Please try again' })
-                            })
+                    .then(() => {
+                        jwtSign(payload)
+                        .then((token) => {
+                            res.status(200).json({ message: 'User signed in successfully', token: token});
                         })
                         .catch((err) => {
-                            return res.status(500).json({ message: 'An error occurred while signing in. Please try again' });
+                            return res.status(500).json('An error occurred while signing in. Please try again');
                         })
                     })
-                    .catch(err => {
-                        res.status(500).json({ message: 'Internal server error' });
-                    });
+                    .catch((err) => {
+                        return res.status(500).json({ message: 'An error occurred while signing in. Please try again' });
+                    })
                 } else {
                     return res.status(400).json({ message: 'Invalid username or password' });
                 }

@@ -6,7 +6,7 @@ const Image = mongoose.model(
     "Images",
     new mongoose.Schema({
         user: { type: String, ref: 'Users' },
-        desc:  { type: String, default: 'GenPicture' },
+        desc: String,
         img: {
             data: Buffer,
             contentType: String

@@ -151,7 +151,7 @@ function uploadProfilePicture(req, res) {
         .then(() => {
             let newImage = new Image({
                 user: req.user.id,
-                desc: 'UserPicture',
+                desc: `Uploaded profile image for ${req.user.firstName} ${req.user.lastName}`,
                 img: {
                     data: req.file.buffer,
                     contentType: req.file.mimetype

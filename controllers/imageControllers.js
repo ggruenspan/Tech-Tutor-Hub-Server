@@ -1,5 +1,7 @@
 // controllers/imageControllers.js
 
+const { createCanvas } = require('canvas'); // For generating the image
+
 // User & Image models (Mongoose schema)
 const User = require('../models/userSchema.js');
 const Image = require('../models/imageSchema.js');
@@ -65,19 +67,43 @@ function removeProfileImage(req, res) {
                                 return res.status(404).json({ message: 'Image not found' });
                             }
 
-                            // Check if the description is 'genPicture'
-                            if (image.description === 'genPicture') {
-                                return res.status(200).json({ message: 'No profile image to remove' });
+                            // Check the description of the image
+                            if (image.desc === `Generate profile image for ${user.profile.firstName} ${user.profile.lastName}`) {
+                                return res.status(403).json({ message: 'Cannot delete the default profile image' });
                             }
 
-                            // Delete the profile image
-                            return Image.findByIdAndDelete(currentProfileImageId).exec()
-                                .then(() => {
-                                    return User.updateOne({ "email.address": email }, { $unset: { "profile.profileImage": "" } });
-                                })
-                                .then(() => {
-                                    res.status(200).json({ message: 'Profile image successfully removed' });
-                                });
+                            if (image.desc === `Uploaded profile image for ${user.profile.firstName} ${user.profile.lastName}`) {
+                                // Delete the uploaded profile image
+                                return Image.findByIdAndDelete(currentProfileImageId).exec()
+                                    .then(() => {
+                                        // Generate a new profile image
+                                        const initial = user.profile.firstName.charAt(0).toUpperCase();
+                                        const imageBuffer = generateProfileImage(initial);
+
+                                        // Save the generated image to the Images collection
+                                        const newImage = new Image({
+                                            user: user.id,
+                                            desc: `Generate profile image for ${user.profile.firstName} ${user.profile.lastName}`,
+                                            img: {
+                                                data: imageBuffer,
+                                                contentType: 'image/png'
+                                            }
+                                        });
+
+                                        return newImage.save();
+                                    })
+                                    .then((savedImage) => {
+                                        // Update the user's profile with the new generated image ID
+                                        user.profile.profileImage = savedImage._id;
+
+                                        return user.save();
+                                    })
+                                    .then(() => {
+                                        res.status(200).json({ message: 'Uploaded profile image deleted' });
+                                    });
+                            }
+
+                            return res.status(200).json({ message: 'No profile image to remove' });
                         });
                 }
 
@@ -92,8 +118,31 @@ function removeProfileImage(req, res) {
     }
 }
 
+// Function to generate profile image with user's first initial
+function generateProfileImage(initial) {
+    const canvas = createCanvas(200, 200); // Create a 200x200 canvas
+    const ctx = canvas.getContext('2d');
+
+    // Background color
+    ctx.fillStyle = '#28A745';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Text settings
+    ctx.fillStyle = '#F5F5F5';
+    ctx.font = 'bold 100px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Draw the initial in the center of the canvas
+    ctx.fillText(initial, canvas.width / 2, canvas.height / 2);
+
+    // Convert canvas to Buffer (to save as base64 string later)
+    return canvas.toBuffer('image/png');
+}
+
 // Export the controller functions
 module.exports = {
     getProfileImage,
-    removeProfileImage
+    removeProfileImage,
+    generateProfileImage
 }

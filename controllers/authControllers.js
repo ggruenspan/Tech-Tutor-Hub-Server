@@ -2,7 +2,6 @@
 
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 const { v4: uuidv4 } = require('uuid');
 
 // User & Image models (Mongoose schema)
@@ -10,6 +9,7 @@ const User = require('../models/userSchema.js');
 const Image = require('../models/imageSchema.js');
 
 const emailController = require('./emailController.js');
+const imageController = require('./imageControllers.js');
 
 const { jwtSign } = require('../config/jwtConfig.js');
 
@@ -19,15 +19,16 @@ function signUp(req, res) {
         const { fullName, email, password } = req.body;
 
         // Check if a user with the given email already exists
-        User.findOne({ "email.address" : email })
+        User.findOne({ "email.address": email })
         .then((user) => {
             if (user) {
                 return res.status(400).json({ message: 'There is already a user with that email: ' + email });
             }
 
-            // Hashes the password
+            // Hash the password
             bcrypt.hash(password, 10)
             .then((hash) => {
+                // Create a new user without the profile image
                 let newUser = new User({
                     _id: uuidv4(),
                     userName: (fullName.split(" ")[0].charAt(0).toUpperCase() + fullName.split(" ")[0].slice(1)) + "." + fullName.split(" ")[1].charAt(0).toUpperCase(),
@@ -41,26 +42,61 @@ function signUp(req, res) {
                     }
                 });
 
-                // Create a new user
+                // Save the new user
                 newUser.save()
-                .then(() => { 
-                    res.status(201).json({ message: 'User signed up successfully' });
+                .then((savedUser) => {
+                    // Generate a profile image with the user's first initial
+                    const initial = fullName.charAt(0).toUpperCase();
+                    const imageBuffer = imageController.generateProfileImage(initial);
+
+                    // Save the image to the Images collection with the user's ID
+                    const newImage = new Image({
+                        user: savedUser._id, // Reference to the user's ID
+                        desc: `Generate profile image for ${fullName}`,
+                        img: {
+                            data: imageBuffer,
+                            contentType: 'image/png'
+                        }
+                    });
+
+                    newImage.save()
+                    .then((savedImage) => {
+                        // Update the user's profile with the image ID
+                        savedUser.profile.profileImage = savedImage._id;
+
+                        savedUser.save()
+                        .then(() => {
+                            res.status(201).json({ message: 'User signed up successfully' });
+                        })
+                        .catch((err) => {
+                            console.log(err);
+                            return res.status(500).json({ message: 'An error occurred while updating the user profile. Please try again' });
+                        });
+                    })
+                    .catch((imageErr) => {
+                        console.log(imageErr);
+                        return res.status(500).json({ message: 'An error occurred while saving the profile image. Please try again' });
+                    });
                 })
                 .catch((err) => {
+                    console.log(err);
                     return res.status(500).json({ message: 'An error occurred while signing up. Please try again' });
                 });
             })
             .catch((hashErr) => {
+                console.log(hashErr);
                 return res.status(500).json({ message: 'An error occurred while signing up. Please try again' });
-            })
+            });
         })
         .catch((err) => {
+            console.log(err);
             return res.status(500).json({ message: 'An error occurred while signing up. Please try again' });
-        })
+        });
     } catch (err) {
+        console.log(err);
         res.status(500).json({ message: 'Internal server error. Please try again' });
     }
-};
+}
 
 // Controller function for user sign-in
 function signIn(req, res) {

@@ -64,36 +64,43 @@ function signUp(req, res) {
                         // Update the user's profile with the image ID
                         savedUser.profile.profileImage = savedImage._id;
 
+                        // Generate a unique reset token and store the reset token and expiration
+                        const expirationTime = new Date();
+                        expirationTime.setMinutes(expirationTime.getMinutes() + 30);
+
+                        savedUser.tokens.verification.verificationToken = crypto.randomBytes(20).toString('hex');
+                        savedUser.tokens.verification.verificationTokenExpiration = expirationTime;
+
                         savedUser.save()
                         .then(() => {
-                            res.status(201).json({ message: 'User signed up successfully' });
+                            emailController.sendVerificationEmail(email, savedUser.tokens.verification.verificationToken)
+                            .then(() => {
+                                res.status(201).json({ message: 'User signed up successfully. Please check your email for verification instructions.' });
+                            })
+                            .catch((emailErr) => {
+                                res.status(500).json({ message: 'User signed up successfully, but there was an error sending the verification email. Please contact support.' });
+                            });
                         })
                         .catch((err) => {
-                            console.log(err);
                             return res.status(500).json({ message: 'An error occurred while updating the user profile. Please try again' });
                         });
                     })
                     .catch((imageErr) => {
-                        console.log(imageErr);
                         return res.status(500).json({ message: 'An error occurred while saving the profile image. Please try again' });
                     });
                 })
                 .catch((err) => {
-                    console.log(err);
                     return res.status(500).json({ message: 'An error occurred while signing up. Please try again' });
                 });
             })
             .catch((hashErr) => {
-                console.log(hashErr);
                 return res.status(500).json({ message: 'An error occurred while signing up. Please try again' });
             });
         })
         .catch((err) => {
-            console.log(err);
             return res.status(500).json({ message: 'An error occurred while signing up. Please try again' });
         });
     } catch (err) {
-        console.log(err);
         res.status(500).json({ message: 'Internal server error. Please try again' });
     }
 }
@@ -108,6 +115,11 @@ function signIn(req, res) {
         .then((user) => {
             if (!user) {
                 return res.status(404).json({ message: 'Unable to find user with email: ' + email });
+            }
+
+            // Check if the email is validated
+            if (!user.email.validated) {
+                return res.status(400).json({ message: 'Email address has not been validated. Please check your email for verification instructions.' });
             }
 
             // Check if password is correct
@@ -161,32 +173,29 @@ function forgotPassword(req, res) {
         const { email } = req.body;
 
         // Check if the email is in the database
-        User.findOne({  "email.address" : email })
+        User.findOne({ "email.address" : email })
         .then((user) => {
             if (!user) {
                 return res.status(400).json({ message: 'Unable to find user with email: ' + email });
             }
 
-            // Generate a unique reset token
-            const resetToken = crypto.randomBytes(20).toString('hex');
+            // Generate a unique reset token and tore the reset token and expiration
             const expirationTime = new Date();
-            expirationTime.setMinutes(expirationTime.getMinutes() + 60);
+            expirationTime.setMinutes(expirationTime.getMinutes() + 30);
 
-            // Store the reset token and expiration in the user's document
-            user.resetToken = resetToken;
-            user.resetTokenExpiration = expirationTime;
+            user.tokens.reset.resetToken = crypto.randomBytes(20).toString('hex');
+            user.tokens.reset.resetTokenExpiration = expirationTime;
 
             user.save()
             .then(() => {
-                subject = 'Password Reset';
-                message = `
-                    <p>You are receiving this because you (or someone else) has requested the reset of the password for your account.</p>
-                    <p>Please click on the following link, or paste this into your browser to complete the process:</p>
-                    <p><a href="https://localhost:4200/reset-password/${resetToken}">Reset Password</a></p>
-                    <p>This link is valid for 30 minutes. If you do not reset your password within this time, you will need to request another reset link.</p>
-                    <p>If you did not request this, please ignore this email, and your password will remain unchanged.</p>
-                `
-                emailController.sendEmail(res, email, subject, message, 'Password reset email sent');
+                // Send verification email
+                emailController.sendResetPasswordEmail(email, user.tokens.reset.resetToken)
+                .then(() => {
+                    res.status(201).json({ message: 'Password reset email sent. Please check your email for reset instructions.' });
+                })
+                .catch((emailErr) => {
+                    res.status(500).json({ message: 'Password reset email sent, but there was an error sending the email. Please contact support.' });
+                });
             })
             .catch(err => {
                 return res.status(500).json({ message: 'An error occurred while saving the reset token' });  
@@ -208,10 +217,10 @@ function resetPassword(req, res) {
         const { password } = req.body;
 
         // Find the user by the reset token and check if it's still valid
-        User.findOne({ resetToken: token })
+        User.findOne({ "tokens.reset.resetToken": token })
         .then((user) => {
-            if(user.resetTokenExpiration.toLocaleTimeString() < new Date().toLocaleTimeString()) {
-                return res.status(400).json({ message: 'Invalid or expired token' });
+            if(user.tokens.reset.resetTokenExpiration.toLocaleTimeString() < new Date().toLocaleTimeString()) {
+                return res.status(400).json({ message: 'Expired token. Please request a new password reset.' });
             }
             // Check if the new password is the same as the current password
             bcrypt.compare(password, user.password)
@@ -221,8 +230,7 @@ function resetPassword(req, res) {
                     .then((hash) => {
                         // Update the user's password and clear the reset token fields
                         user.password = hash;
-                        user.resetToken = undefined;
-                        user.resetTokenExpiration = undefined;
+                        user.tokens.reset = undefined;
     
                         // Save the updated user in the database
                         user.save()
@@ -242,16 +250,51 @@ function resetPassword(req, res) {
             });
         })
         .catch((err) => {
-            return res.status(500).json({ message: 'An error occurred while finding the user' });
+            return res.status(500).json({ message: 'Invalid token. Please request a new password reset' });
         });
     } catch (err) {
         res.status(500).json({ message: 'Internal server error. Please try again' });
     }
 }
 
+// Controller function for verifying the user's email address
+function verifyEmail(req, res) {
+    try {
+        const { token } = req.params;
+
+        // Find the user by the reset token and check if it's still valid
+        User.findOne({ "tokens.verification.verificationToken": token })
+        .then((user) => {
+            if(user.tokens.verification.verificationTokenExpiration.toLocaleTimeString() < new Date().toLocaleTimeString()) {
+                return res.status(400).json({ message: 'Expired token. Please contact support.' });
+            }
+
+            // Update the user and clear the verification token fields
+            user.email.validated = true;
+            user.tokens.verification = undefined;
+
+            // Save the updated user in the database
+            user.save()
+            .then(() => {
+                res.status(200).json({ message: 'Verified email successfully' });
+            })
+            .catch((err) => {
+                return res.status(500).json({ message: 'An error occurred while resetting you password in' });
+            }); 
+        })
+        .catch((err) => {
+            return res.status(500).json({ message: 'Invalid token. Please contact support.' });
+        });
+    } catch (err) {
+        res.status(500).json({ message: 'Internal server error. Please try again' });
+    }
+}
+
+
 // Export the controller functions
 module.exports = {
     signUp,
+    verifyEmail,
     signIn,
     forgotPassword,
     resetPassword

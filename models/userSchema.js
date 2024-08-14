@@ -34,9 +34,16 @@ const User = mongoose.model(
             dateTime: Date,
             userAgent: String
         }],
-        resetToken: String,
-        resetTokenExpiration: Date,
-        
+        tokens: {
+            verification: {
+                verificationToken: String,
+                verificationTokenExpiration: Date
+            },
+            reset: {
+                resetToken: String,
+                resetTokenExpiration: Date
+            }
+        }
     }, {
         versionKey: false
     })

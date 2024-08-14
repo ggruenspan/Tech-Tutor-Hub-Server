@@ -24,4 +24,9 @@ router.post('/reset-password/:token', (req,res) => {
     userController.resetPassword(req, res);
 });
 
+// Route for user verification
+router.get('/verify-email/:token', (req, res) => {
+    userController.verifyEmail(req, res);
+});
+
 module.exports = router;

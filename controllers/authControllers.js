@@ -65,7 +65,7 @@ function signUp(req, res) {
                         savedUser.profile.profileImage = savedImage._id;
 
                         // Generate a unique reset token and store the reset token and expiration
-                        const expirationTime = new Date();
+                        const expirationTime = new Date(res.locals.localTime);
                         expirationTime.setMinutes(expirationTime.getMinutes() + 30);
 
                         savedUser.tokens.verification.verificationToken = crypto.randomBytes(20).toString('hex');
@@ -129,14 +129,12 @@ function signIn(req, res) {
                     const payload = {
                         id: user.id,
                         role: user.role,
-                        access: user.access,
                         userName: user.userName,
                         email: user.email.address,
-                        avatar: user.profile.avatar,
                     }
 
                     // Update user's login history and generate JWT token
-                    user.loginHistory.push({dateTime: new Date(), userAgent: req.get('User-Agent')});
+                    user.loginHistory.push({dateTime: new Date(res.locals.localTime), userAgent: req.get('User-Agent')});
                     user.updateOne({ $set: { loginHistory: user.loginHistory}})
 
                     .then(() => {
@@ -180,7 +178,7 @@ function forgotPassword(req, res) {
             }
 
             // Generate a unique reset token and tore the reset token and expiration
-            const expirationTime = new Date();
+            const expirationTime = new Date(res.locals.localTime);
             expirationTime.setMinutes(expirationTime.getMinutes() + 30);
 
             user.tokens.reset.resetToken = crypto.randomBytes(20).toString('hex');
@@ -219,7 +217,7 @@ function resetPassword(req, res) {
         // Find the user by the reset token and check if it's still valid
         User.findOne({ "tokens.reset.resetToken": token })
         .then((user) => {
-            if(user.tokens.reset.resetTokenExpiration.toLocaleTimeString() < new Date().toLocaleTimeString()) {
+            if(user.tokens.reset.resetTokenExpiration.toLocaleTimeString() < new Date(res.locals.localTime).toLocaleTimeString()) {
                 return res.status(400).json({ message: 'Expired token. Please request a new password reset.' });
             }
             // Check if the new password is the same as the current password
@@ -265,7 +263,7 @@ function verifyEmail(req, res) {
         // Find the user by the reset token and check if it's still valid
         User.findOne({ "tokens.verification.verificationToken": token })
         .then((user) => {
-            if(user.tokens.verification.verificationTokenExpiration.toLocaleTimeString() < new Date().toLocaleTimeString()) {
+            if(user.tokens.verification.verificationTokenExpiration.toLocaleTimeString() < new Date(res.locals.localTime).toLocaleTimeString()) {
                 return res.status(400).json({ message: 'Expired token. Please contact support.' });
             }
 

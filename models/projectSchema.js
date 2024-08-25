@@ -1,18 +1,21 @@
-// models/imageSchema.js
+// models/projectSchema.js
 
 const mongoose = require('mongoose');
 
-const Image = mongoose.model(
-    "Images",
+const project = mongoose.model(
+    "Projects",
     new mongoose.Schema({
         user: { type: String, ref: 'Users' },
+        name: String,
+        desc: String,
         img: {
             data: Buffer,
             contentType: String
-        }
+        },
+        link: String
     }, {
         versionKey: false
     })
 );
 
-module.exports = Image;
+module.exports = project;

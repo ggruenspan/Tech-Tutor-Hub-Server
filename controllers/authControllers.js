@@ -36,7 +36,7 @@ function signUp(req, res) {
                     email: {
                         address: email
                     },
-                    profile: {
+                    account: {
                         firstName: fullName.split(" ")[0],
                         lastName: fullName.split(" ")[1],
                     }
@@ -52,7 +52,6 @@ function signUp(req, res) {
                     // Save the image to the Images collection with the user's ID
                     const newImage = new Image({
                         user: savedUser._id, // Reference to the user's ID
-                        desc: `Generate profile image for ${fullName}`,
                         img: {
                             data: imageBuffer,
                             contentType: 'image/png'
@@ -263,7 +262,7 @@ function verifyEmail(req, res) {
         // Find the user by the reset token and check if it's still valid
         User.findOne({ "tokens.verification.verificationToken": token })
         .then((user) => {
-            if(user.tokens.verification.verificationTokenExpiration.toLocaleTimeString() < new Date(res.locals.localTime).toLocaleTimeString()) {
+            if(user.tokens.verification.verificationTokenExpiration < new Date(res.locals.localTime)) {
                 return res.status(400).json({ message: 'Expired token. Please contact support.' });
             }
 

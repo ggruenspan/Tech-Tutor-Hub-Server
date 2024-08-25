@@ -14,20 +14,30 @@ const User = mongoose.model(
             address: String,
             validated: {type: Boolean, default: false}
         },
-        profile: {
+        account: {
             completed: {type: Boolean, default: false},
-            profileImage: { type: String, ref: 'Images' },
             firstName: String,
             lastName: String,
             phoneNumber: String,
             dateOfBirth: Date,
-            address: {
+        },
+        profile: {
+            profileImage: { type: String, ref: 'Images' },
+            bio: String,
+            pronouns: String,
+            portfolioLink: String,
+            projectOne: { type: String, ref: 'Projects' },
+            projectTwo: { type: String, ref: 'Projects' },
+            socials: {
+                linkOne: String,
+                linkTwo: String,
+            },
+            location: {
                 country: String,
                 stateProvince: String,
                 city: String,
-            }, 
-            bio: String,
-            pronouns: String,
+                timeZone: String,
+            },
         },
         loginHistory: [{
             _id: false,
@@ -43,7 +53,8 @@ const User = mongoose.model(
                 resetToken: String,
                 resetTokenExpiration: Date
             }
-        }
+        },
+        created_at: { type: Date, required: true, default: Date.now }
     }, {
         versionKey: false
     })

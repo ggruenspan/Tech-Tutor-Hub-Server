@@ -30,7 +30,6 @@ function getProfileImage(req, res) {
                             contentType: image.img.contentType
                         }
                     });
-
                 }
             })
             .catch(err => {
@@ -68,22 +67,22 @@ function removeProfileImage(req, res) {
                             }
 
                             // Check the description of the image
-                            if (image.desc === `Generate profile image for ${user.profile.firstName} ${user.profile.lastName}`) {
+                            if (image.desc === `Generate profile image for ${user.account.firstName} ${user.account.lastName}`) {
                                 return res.status(403).json({ message: 'Cannot delete the default profile image' });
                             }
 
-                            if (image.desc === `Uploaded profile image for ${user.profile.firstName} ${user.profile.lastName}`) {
+                            if (image.desc === `Uploaded profile image for ${user.account.firstName} ${user.account.lastName}`) {
                                 // Delete the uploaded profile image
                                 return Image.findByIdAndDelete(currentProfileImageId).exec()
                                     .then(() => {
                                         // Generate a new profile image
-                                        const initial = user.profile.firstName.charAt(0).toUpperCase();
+                                        const initial = user.account.firstName.charAt(0).toUpperCase();
                                         const imageBuffer = generateProfileImage(initial);
 
                                         // Save the generated image to the Images collection
                                         const newImage = new Image({
                                             user: user.id,
-                                            desc: `Generate profile image for ${user.profile.firstName} ${user.profile.lastName}`,
+                                            desc: `Generate profile image for ${user.account.firstName} ${user.account.lastName}`,
                                             img: {
                                                 data: imageBuffer,
                                                 contentType: 'image/png'

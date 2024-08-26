@@ -39,7 +39,34 @@ To get started with the development of Tech Tutor Hub server-side, follow these 
     # Install dependencies
     npm install
     ```
-3. Download the Client Repository:
+You need to run the application on HTTPS. To achieve this, follow these steps from [Medium.com]:
+1. First, open PowerShell as administrator
+    Run
+    ```bash
+    Get-ExecutionPolicy 
+    ```
+    If it returns Restricted, then run 
+    ```bash
+    Set-ExecutionPolicy AllSigned or Set-ExecutionPolicy Bypass -Scope Process.
+    ```
+2. Run this command to install Chocolatey
+    ```bash
+    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    ```
+3. After install Chocolatey, we can install mkcert using
+    ```bash
+    choco install mkcert
+    ```
+4. Now we create a trusted certificate authority in our system’s root store
+    ```bash
+    mkcert -install
+    ```
+5. Run this to valid HTTPS certificates for localhost
+    ```bash
+    # Create a folder in the main directory called 'ssl'
+    mkcert localhost
+    ```
+6. Download the Client Repository:
 
 To complete the application, you'll need to download and set up the client side of Tech Tutor Hub. Follow the instructions in the [Client Repository] to get started.
 

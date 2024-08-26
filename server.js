@@ -3,8 +3,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const passport = require('passport')
-const session = require('express-session')
+const passport = require('passport');
+const session = require('express-session');
+const https = require('https');
+const fs = require('fs');
 const app = express();
 
 const localTimeMiddleware = require('./middleware/getLocalTime.js');
@@ -36,7 +38,13 @@ app.use('/', require('./routes/imageAPI'));
 app.use('/', require('./routes/userAPI'));
 app.use('/', require('./routes/authAPI'));
 
-// Start the server
-app.listen(process.env.PORT, () => {
-    console.log(`Server is running on port ${process.env.PORT}`);
+// Path to your SSL certificate and key
+const options = {
+    key: fs.readFileSync('./ssl/localhost-key.pem'),
+    cert: fs.readFileSync('./ssl/localhost.pem')
+  };
+
+// Create HTTPS server
+https.createServer(options, app).listen(process.env.PORT, () => {
+  console.log(`Server is running on https://localhost:${process.env.PORT}`);
 });

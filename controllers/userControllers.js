@@ -3,11 +3,12 @@
 // User & Image models (Mongoose schema)
 const User = require('../models/userSchema.js');
 const Image = require('../models/imageSchema.js');
+const Project = require('../models/projectSchema.js');
 
 const { jwtSign } = require('../config/jwtConfig.js');
 
 // Function to get the users profile
-function getUserProfile (req, res, message) {
+function getUserProfile (req, res) {
     try {
         const { email } = req.user;
         // Find the user with the given email
@@ -20,32 +21,27 @@ function getUserProfile (req, res, message) {
             const payload = {
                 id: user.id,
                 role: user.role,
-                access: user.access,
                 userName: user.userName,
                 email: user.email.address,
-                firstName: user.profile.firstName,
-                lastName: user.profile.lastName,
-                phoneNumber: user.profile.phoneNumber,
-                dateOfBirth: user.profile.dateOfBirth,
-                country: user.profile.address.country,
-                stateProvince: user.profile.address.stateProvince,
-                city: user.profile.address.city,
                 bio: user.profile.bio,
-                pronouns: user.profile.pronouns
-            }
+                pronouns: user.profile.pronouns,
+                portfolioLink: user.profile.portfolioLink,
+                socialLink1: user.profile.socials.linkOne,
+                socialLink2: user.profile.socials.linkTwo,
+                country: user.profile.location.country,
+                stateProvince: user.profile.location.stateProvince,
+                city: user.profile.location.city,
+                timeZone: user.profile.location.timeZone,
+            };
 
+            // Generate JWT token
             jwtSign(payload)
             .then((token) => {
-                if(message === '') {
-                    res.status(200).json({ message: 'User profile retrieved successfully', token: token });
-                } else {
-                    // Display custom message
-                    res.status(200).json({ message: message, token: token });
-                }
+                res.status(200).json({ message: 'User profile retrieved successfully', token: token });
             })
             .catch((err) => {
                 return res.status(500).json({ message: 'An error occurred while generating the token' });
-            })
+            });
         })
         .catch((err) => {
             res.status(500).json({ message: 'Internal server error. Please try again' });
@@ -56,80 +52,103 @@ function getUserProfile (req, res, message) {
 }
 
 // Function to update users profile
-function updateUserProfile (req, res) {
+function updateUserProfile(req, res) {
     try {
-        const { oldEmail, firstName, lastName, newEmail, phoneNumber, dateOfBirth, country, stateProvince, city, bio, pronouns } = req.body;
+        const { email } = req.user;
+        const { bio, pronouns, portfolioLink, project1Name, project1Link, project1Desc, project2Name, project2Link, 
+                project2Desc, socialLink1, socialLink2, country, stateProvince, city, timeZone} = req.body;
+        
+        console.log(req.body);
 
-        // Check if a user with the given email already exists
-        User.findOne({ "email.address" : newEmail })
-       .then((user) => {
-            if(user && user.email.address !== oldEmail) {
-                // If user with newEmail already exists and it's not the current user, send an error message
-                return res.status(400).json({ message: 'Email already in use. Please use a different email.' });
-            }
-            else {
-                const userName = (firstName.split(" ")[0].charAt(0).toUpperCase() + firstName.split(" ")[0].slice(1)) + "." + lastName.charAt(0).toUpperCase();
+        // Find the user with the given email
+        User.findOne({ "email.address": email })
+            .then((user) => {
+                if (!user) {
+                    return res.status(404).json({ message: 'User not found' });
+                }
 
-                // Find the user by their old email address and update their profile
-                User.findOneAndUpdate(
-                    {
-                        "email.address": oldEmail,
-                        $or: [
-                            {"userName": { $ne: userName}},
-                            { "email.address": { $ne: newEmail }},
-                            { "profile.firstName": { $ne: firstName }},
-                            { "profile.lastName": { $ne: lastName }},
-                            { "profile.phoneNumber": { $ne: phoneNumber }},
-                            { "profile.dateOfBirth": { $ne: dateOfBirth }},
-                            { "profile.address.country": { $ne: country }},
-                            { "profile.address.stateProvince": { $ne: stateProvince }},
-                            { "profile.address.city": { $ne: city }},
-                            { "profile.bio": { $ne: bio }},
-                            { "profile.pronouns": { $ne: pronouns }} 
-                        ]
-                    },
-                    { 
-                        $set: {
-                            "userName": userName,
-                            "email.address": newEmail,
-                            "profile.firstName": firstName,
-                            "profile.lastName": lastName,
-                            "profile.phoneNumber": phoneNumber,
-                            "profile.dateOfBirth": dateOfBirth,
-                            "profile.address.country": country,
-                            "profile.address.stateProvince": stateProvince,
-                            "profile.address.city": city,
-                            "profile.bio": bio,
-                            "profile.pronouns": pronouns,
-                            "profile.completed": true
-                        }
-                    },
-                    { new: true, runValidators: true } // Return the updated document and run schema validators
-                )
-                .then((user) => {
-                    if (!user) {
-                        return res.status(200).json({ message: 'No changes detected.' });
-                    }
+                // Prepare deletion promises only if new images are uploaded
+                const deleteProject1Image = req.files.project1Image && user.profile.projectOne
+                    ? Project.findByIdAndDelete(user.profile.projectOne).exec()
+                    : Promise.resolve();
 
-                    // If update is successful, call getUserProfile
-                    req.user = { email: user.email.address };
-                    getUserProfile(req, res, 'User profile updated successfully');
-                })
-                .catch((err) => {
-                    res.status(500).json({ message: 'An error occurred while updating user profile' });
-                });
-            }
-       })
-       .catch((err) => {
-            res.status(500).json({ message: 'Internal server error. Please try again' });
-       })
+                const deleteProject2Image = req.files.project2Image && user.profile.projectTwo
+                    ? Project.findByIdAndDelete(user.profile.projectTwo).exec()
+                    : Promise.resolve();
 
-    } catch(err) {
+                return Promise.all([deleteProject1Image, deleteProject2Image]);
+            })
+            .then(() => {
+                // Prepare image save promises
+                const savePromises = [];
+
+                if (req.files.project1Image) {
+                    const newProject1Image = new Project({
+                        user: req.user.id,
+                        name: project1Name,
+                        desc: project1Desc,
+                        img: {
+                            data: req.files.project1Image[0].buffer,
+                            contentType: req.files.project1Image[0].mimetype,
+                        },
+                        link: project1Link
+                    });
+
+                    savePromises.push(newProject1Image.save());
+                }
+
+                if (req.files.project2Image) {
+                    const newProject2Image = new Project({
+                        user: req.user.id,
+                        name: project2Name,
+                        desc: project2Desc,
+                        img: {
+                            data: req.files.project2Image[0].buffer,
+                            contentType: req.files.project2Image[0].mimetype,
+                        },
+                        link: project2Link
+                    });
+
+                    savePromises.push(newProject2Image.save());
+                }
+
+                // Save images if any
+                return Promise.all(savePromises);
+            })
+            .then((savedProjects) => {
+                const updateFields = {
+                    'profile.bio': bio,
+                    'profile.pronouns': pronouns,
+                    'profile.portfolioLink': portfolioLink,
+                    'profile.socials.linkOne': socialLink1,
+                    'profile.socials.linkTwo': socialLink2,
+                    'profile.location.country': country,
+                    'profile.location.stateProvince': stateProvince,
+                    'profile.location.city': city,
+                    'profile.location.timeZone': timeZone
+                };
+
+                if (req.files.project1Image) {
+                    updateFields['profile.projectOne'] = savedProjects[0].id;
+                }
+
+                if (req.files.project2Image) {
+                    updateFields['profile.projectTwo'] = savedProjects.length > 1 ? savedProjects[1].id : null;
+                }
+
+                return User.findByIdAndUpdate(req.user.id, updateFields, { new: true }).exec();
+            })
+            .then(() => {
+                res.status(200).json({ message: 'Profile updated!' });
+            })
+            .catch(err => {
+                res.status(500).json({ error: 'Internal server error. Please try again' });
+            });
+    } catch (err) {
         return res.status(500).json({ message: 'Internal server error. Please try again' });
     }
 }
 
-// Function to update users profile picture
 function uploadProfilePicture(req, res) {
     try {
         const { email } = req.user;
@@ -143,7 +162,7 @@ function uploadProfilePicture(req, res) {
 
             const currentProfileImageId = user.profile.profileImage;
             if (currentProfileImageId ) {
-                return Image.findByIdAndDelete(currentProfileImageId ).exec();
+                return Image.findByIdAndDelete(currentProfileImageId).exec();
             }
 
             return Promise.resolve();
@@ -151,7 +170,6 @@ function uploadProfilePicture(req, res) {
         .then(() => {
             let newImage = new Image({
                 user: req.user.id,
-                desc: `Uploaded profile image for ${req.user.firstName} ${req.user.lastName}`,
                 img: {
                     data: req.file.buffer,
                     contentType: req.file.mimetype
@@ -178,9 +196,31 @@ function uploadProfilePicture(req, res) {
     }
 }
 
+// Controller function for verifying the user's email address
+function verifyUser(req, res) {
+    try {
+        userId = req.user.id;
+
+        User.findById(userId)
+        .then(user => {
+          if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+          }
+          res.status(200).json({ message: 'User exists' });
+        })
+        .catch(err => {
+          res.status(500).json({ message: 'Internal server error' });
+        });
+    } catch (err) {
+        res.status(500).json({ message: 'Internal server error. Please try again' });
+    }
+}
+
+
 // Export the controller functions
 module.exports = { 
     getUserProfile,
     updateUserProfile,
-    uploadProfilePicture
+    uploadProfilePicture,
+    verifyUser
 }

@@ -9,13 +9,11 @@ const Image = require('../models/imageSchema.js');
 // Function for getting the user profile image
 function getProfileImage(req, res) {
     try {
-        const { email } = req.user;
-
-        // Find the user with the given email
-        User.findOne({ "email.address" : email, })
+        // Find the user with the given id
+        User.findById(req.user.id)
         .then((user) => {
             if (!user) {
-                return res.status(404).json({ message: 'Unable to find user with email: ' + email });
+                return res.status(404).json({ message: 'No account found' });
             }
 
             Image.findById(user.profile.profileImage)
@@ -33,87 +31,83 @@ function getProfileImage(req, res) {
                 }
             })
             .catch(err => {
-                res.status(500).json({ message: 'Internal server error' });
+                res.status(500).json({ message: 'Error occurred while checking for an existing profile image. Please try again. If the issue persists, contact support.' });
             });
 
         })
         .catch((err) => {
-            return res.status(500).json({ message: 'An error occurred while signing in. Please try again' });
+            res.status(500).json({ message: 'Error occurred while checking for an existing user. Please try again. If the issue persists, contact support.' });
         })
     } catch (err) {
-        res.status(500).json({ message: 'Internal server error. Please try again' });
+        res.status(500).json({ message: 'Internal server error. Please try again. If the issue persists, contact support.' });
     }
 }
 
 // Function for removing a users profile image
 function removeProfileImage(req, res) {
     try {
-        const { email } = req.user;
+        // Find the user with the given id
+        User.findById(req.user.id)
+        .then((user) => {
+            if (!user) {
+                return res.status(404).json({ message: 'No account found' });
+            }
 
-        // Find the user with the given email
-        User.findOne({ "email.address": email })
-            .then((user) => {
-                if (!user) {
-                    return res.status(404).json({ message: 'User not found' });
-                }
+            const currentProfileImageId = user.profile.profileImage;
+            if (currentProfileImageId) {
+                // Fetch the image details to check the description
+                return Image.findById(currentProfileImageId).exec()
+                    .then((image) => {
+                        if (!image) {
+                            return res.status(404).json({ message: 'Image not found' });
+                        }
 
-                const currentProfileImageId = user.profile.profileImage;
-                if (currentProfileImageId) {
-                    // Fetch the image details to check the description
-                    return Image.findById(currentProfileImageId).exec()
-                        .then((image) => {
-                            if (!image) {
-                                return res.status(404).json({ message: 'Image not found' });
-                            }
+                        // Check the description of the image
+                        if (image.desc === `Generated profile image for ${user.account.firstName} ${user.account.lastName}`) {
+                            return res.status(403).json({ message: 'Cannot delete the default profile image' });
+                        }
 
-                            // Check the description of the image
-                            if (image.desc === `Generate profile image for ${user.account.firstName} ${user.account.lastName}`) {
-                                return res.status(403).json({ message: 'Cannot delete the default profile image' });
-                            }
+                        if (image.desc === `Uploaded profile image for ${user.account.firstName} ${user.account.lastName}`) {
+                            // Delete the uploaded profile image
+                            return Image.findByIdAndDelete(currentProfileImageId).exec()
+                                .then(() => {
+                                    // Generate a new profile image
+                                    const initial = user.account.firstName.charAt(0).toUpperCase();
+                                    const imageBuffer = generateProfileImage(initial);
 
-                            if (image.desc === `Uploaded profile image for ${user.account.firstName} ${user.account.lastName}`) {
-                                // Delete the uploaded profile image
-                                return Image.findByIdAndDelete(currentProfileImageId).exec()
-                                    .then(() => {
-                                        // Generate a new profile image
-                                        const initial = user.account.firstName.charAt(0).toUpperCase();
-                                        const imageBuffer = generateProfileImage(initial);
-
-                                        // Save the generated image to the Images collection
-                                        const newImage = new Image({
-                                            user: user.id,
-                                            desc: `Generate profile image for ${user.account.firstName} ${user.account.lastName}`,
-                                            img: {
-                                                data: imageBuffer,
-                                                contentType: 'image/png'
-                                            }
-                                        });
-
-                                        return newImage.save();
-                                    })
-                                    .then((savedImage) => {
-                                        // Update the user's profile with the new generated image ID
-                                        user.profile.profileImage = savedImage._id;
-
-                                        return user.save();
-                                    })
-                                    .then(() => {
-                                        res.status(200).json({ message: 'Uploaded profile image deleted' });
+                                    // Save the generated image to the Images collection
+                                    const newImage = new Image({
+                                        user: user.id,
+                                        desc: `Generate profile image for ${user.account.firstName} ${user.account.lastName}`,
+                                        img: {
+                                            data: imageBuffer,
+                                            contentType: 'image/png'
+                                        }
                                     });
-                            }
 
-                            return res.status(200).json({ message: 'No profile image to remove' });
-                        });
-                }
+                                    return newImage.save();
+                                })
+                                .then((savedImage) => {
+                                    // Update the user's profile with the new generated image ID
+                                    user.profile.profileImage = savedImage._id;
 
-                // If there's no profile image, send a success message
-                return res.status(200).json({ message: 'No profile image to remove' });
-            })
-            .catch((err) => {
-                res.status(500).json({ message: 'An error occurred while processing the request. Please try again' });
-            });
+                                    return user.save();
+                                })
+                                .then(() => {
+                                    res.status(200).json({ message: 'Profile image deleted' });
+                                });
+                        }
+                        return res.status(200).json({ message: 'No profile image to remove' });
+                    });
+            }
+            // If there's no profile image, send a success message
+            return res.status(200).json({ message: 'No profile image to remove' });
+        })
+        .catch((err) => {
+            res.status(500).json({ message: 'Error occurred while checking for an existing user. Please try again. If the issue persists, contact support.' });
+        });
     } catch (err) {
-        res.status(500).json({ message: 'Internal server error. Please try again' });
+        res.status(500).json({ message: 'Internal server error. Please try again. If the issue persists, contact support.' });
     }
 }
 

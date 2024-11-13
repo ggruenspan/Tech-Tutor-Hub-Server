@@ -1,4 +1,4 @@
-// controllers/userControllers.js
+// controllers/settingsControllers.js
 
 // User & Image models (Mongoose schema)
 const User = require('../models/userSchema.js');
@@ -8,7 +8,7 @@ const Project = require('../models/projectSchema.js');
 const { jwtSign } = require('../config/jwtConfig.js');
 
 // Function to get the users profile
-function getUserProfile (req, res) {
+function getPublicProfile (req, res) {
     try {
         // Find the user with the given id
         User.findById(req.user.id)
@@ -27,10 +27,8 @@ function getUserProfile (req, res) {
                 portfolioLink: user.profile.portfolioLink,
                 socialLink1: user.profile.socials.linkOne,
                 socialLink2: user.profile.socials.linkTwo,
-                country: user.profile.location.country,
-                stateProvince: user.profile.location.stateProvince,
-                city: user.profile.location.city,
-                timeZone: user.profile.location.timeZone,
+                projectOne: user.profile.projectOne,
+                projectTwo: user.profile.projectTwo,
             };
 
             // Generate JWT token
@@ -51,10 +49,10 @@ function getUserProfile (req, res) {
 }
 
 // Function to update users profile
-function updateUserProfile(req, res) {
+function updatePublicProfile(req, res) {
     try {
         const { bio, pronouns, portfolioLink, project1Name, project1Link, project1Desc, project2Name, project2Link, 
-                project2Desc, socialLink1, socialLink2, country, stateProvince, city, timeZone} = req.body;
+                project2Desc, socialLink1, socialLink2} = req.body;
         
         // Find the user with the given id
         User.findById(req.user.id)
@@ -117,11 +115,7 @@ function updateUserProfile(req, res) {
                 'profile.pronouns': pronouns,
                 'profile.portfolioLink': portfolioLink,
                 'profile.socials.linkOne': socialLink1,
-                'profile.socials.linkTwo': socialLink2,
-                'profile.location.country': country,
-                'profile.location.stateProvince': stateProvince,
-                'profile.location.city': city,
-                'profile.location.timeZone': timeZone
+                'profile.socials.linkTwo': socialLink2
             };
 
             if (req.files.project1Image) {
@@ -213,8 +207,8 @@ function verifyUser(req, res) {
 
 // Export the controller functions
 module.exports = { 
-    getUserProfile,
-    updateUserProfile,
+    getPublicProfile,
+    updatePublicProfile,
     uploadProfilePicture,
     verifyUser
 }

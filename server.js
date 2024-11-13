@@ -34,9 +34,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(localTimeMiddleware);
 
 // API routes
-app.use('/', require('./routes/imageAPI'));
-app.use('/', require('./routes/userAPI'));
 app.use('/', require('./routes/authAPI'));
+app.use('/', require('./routes/imageAPI'));
+app.use('/', require('./routes/settingsAPI'));
+app.use('/', require('./routes/userAPI.js'));
 
 // Path to your SSL certificate and key
 const options = {

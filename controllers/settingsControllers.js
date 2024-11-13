@@ -5,7 +5,7 @@ const User = require('../models/userSchema.js');
 const Image = require('../models/imageSchema.js');
 const Project = require('../models/projectSchema.js');
 
-const { jwtSign } = require('../config/jwtConfig.js');
+// const { jwtSign } = require('../config/jwtConfig.js');
 
 // Function to get the users profile
 function getPublicProfile (req, res) {
@@ -15,30 +15,10 @@ function getPublicProfile (req, res) {
         .then((user) => {
             if (!user) {
                 return res.status(404).json({ message: 'No account found' });
+            } else {
+                res.status(200).json({ message: 'User profile retrieved successfully', user: user });
             }
 
-            const payload = {
-                id: user.id,
-                role: user.role,
-                userName: user.userName,
-                email: user.email.address,
-                bio: user.profile.bio,
-                pronouns: user.profile.pronouns,
-                portfolioLink: user.profile.portfolioLink,
-                socialLink1: user.profile.socials.linkOne,
-                socialLink2: user.profile.socials.linkTwo,
-                projectOne: user.profile.projectOne,
-                projectTwo: user.profile.projectTwo,
-            };
-
-            // Generate JWT token
-            jwtSign(payload)
-            .then((token) => {
-                res.status(200).json({ message: 'User profile retrieved successfully', token: token });
-            })
-            .catch((err) => {
-                return res.status(500).json({ message: 'Error occurred while generating the token. Please try again. If the issue persists, contact support.' });
-            });
         })
         .catch((err) => {
             res.status(500).json({ message: 'Error occurred while checking for an existing user. Please try again. If the issue persists, contact support.' });

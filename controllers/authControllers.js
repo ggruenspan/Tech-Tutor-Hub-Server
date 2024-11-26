@@ -9,7 +9,7 @@ const User = require('../models/userSchema.js');
 const Image = require('../models/imageSchema.js');
 
 const emailController = require('./emailController.js');
-const imageController = require('./imageControllers.js');
+const publicProfileController = require('./publicProfileController.js');
 
 const { jwtSign } = require('../config/jwtConfig.js');
 
@@ -45,7 +45,7 @@ function signUp(req, res) {
                 .then((savedUser) => {
                     // Generate a profile image with the user's first initial
                     const initial = fullName.charAt(0).toUpperCase();
-                    const imageBuffer = imageController.generateProfileImage(initial);
+                    const imageBuffer = publicProfileController.generateProfileImage(initial);
 
                     // Save the image to the Images collection with the user's ID
                     const newImage = new Image({

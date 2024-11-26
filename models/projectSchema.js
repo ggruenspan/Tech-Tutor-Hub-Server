@@ -12,7 +12,7 @@ const project = mongoose.model(
             data: Buffer,
             contentType: String
         },
-        link: String
+        url: String
     }, {
         versionKey: false
     })

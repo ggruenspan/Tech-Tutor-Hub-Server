@@ -50,7 +50,7 @@ function signUp(req, res) {
                     // Save the image to the Images collection with the user's ID
                     const newImage = new Image({
                         user: savedUser._id, // Reference to the user's ID
-                        desc: `Generated profile image for ${savedUser.account.firstName} ${savedUser.account.lastName}`,
+                        desc: `Generated`,
                         img: {
                             data: imageBuffer,
                             contentType: 'image/png'

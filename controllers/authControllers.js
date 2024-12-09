@@ -305,11 +305,31 @@ function verifyEmail(req, res) {
     }
 }
 
+// Controller function for verifying the user
+function verifyUser(req, res) {
+    try {
+        // Find the user with the given id
+        User.findById(req.user.id)
+        .then(user => {
+          if (!user) {
+            return res.status(404).json({ message: 'No account found' });
+          }
+          res.status(200).json({ message: 'User exists' });
+        })
+        .catch(err => {
+          res.status(500).json({ message: 'Internal server error' });
+        });
+    } catch (err) {
+        res.status(500).json({ message: 'Internal server error. Please try again' });
+    }
+}
+
 // Export the controller functions
 module.exports = {
     signUp,
-    verifyEmail,
     signIn,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    verifyEmail,
+    verifyUser
 }

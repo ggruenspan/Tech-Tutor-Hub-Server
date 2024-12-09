@@ -1,6 +1,7 @@
 // routes/userAPI.js
 
 const express = require('express');
+const authenticateToken = require('../middleware/authenticateToken.js');
 const authController = require('../controllers/authControllers.js');
 const router = express.Router();
 
@@ -27,6 +28,11 @@ router.post('/reset-password/:token', (req,res) => {
 // Route for user email verification
 router.get('/verify-email/:token', (req, res) => {
     authController.verifyEmail(req, res);
+});
+
+// Route for user verification
+router.get('/verify-user', authenticateToken, (req, res) => {
+    authController.verifyUser(req, res);
 });
 
 module.exports = router;

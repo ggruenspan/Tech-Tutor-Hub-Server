@@ -1,11 +1,11 @@
 // controllers/publicProfileController.js
 
 // User & Image models (Mongoose schema)
-const User = require('../models/userSchema.js');
-const Image = require('../models/imageSchema.js');
-const Project = require('../models/projectSchema.js');
+const User = require('../../models/userSchema.js');
+const Image = require('../../models/imageSchema.js');
+const Project = require('../../models/projectSchema.js');
 
-const { jwtSign } = require('../config/jwtConfig.js');
+const { jwtSign } = require('../../config/jwtConfig.js');
 const { createCanvas } = require('canvas'); // For generating the image
 
 // Function to get the users profile

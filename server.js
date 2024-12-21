@@ -35,8 +35,8 @@ app.use(localTimeMiddleware);
 
 // API routes
 app.use('/', require('./routes/authAPI'));
-app.use('/', require('./routes/settingsAPI'));
-app.use('/', require('./routes/userAPI.js'));
+app.use('/', require('./routes/settings/publicProfileAPI.js'));
+app.use('/', require('./routes/user/userProfileAPI.js'));
 
 // Path to your SSL certificate and key
 const options = {

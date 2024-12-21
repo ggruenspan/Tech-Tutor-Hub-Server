@@ -1,9 +1,9 @@
 // routes/settingsAPI.js
 
 const express = require('express');
-const authenticateToken = require('../middleware/authenticateToken.js');
-const upload = require('../config/multerConfig.js');
-const publicProfileController = require('../controllers/publicProfileController.js');
+const authenticateToken = require('../../middleware/authenticateToken.js');
+const upload = require('../../config/multerConfig.js');
+const publicProfileController = require('../../controllers/settings/publicProfileController.js');
 const router = express.Router();
 
 // ----------------------------------------- Public Profile Page Start -------------------------------------------------------

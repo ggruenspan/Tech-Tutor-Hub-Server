@@ -1,17 +1,17 @@
 // controllers/settingsControllers.js
 
 // User & Image models (Mongoose schema)
-const User = require('../models/userSchema.js');
-const Image = require('../models/imageSchema.js');
-const Project = require('../models/projectSchema.js');
+const User = require('../../models/userSchema.js');
+const Image = require('../../models/imageSchema.js');
+const Project = require('../../models/projectSchema.js');
 
-const { jwtSign } = require('../config/jwtConfig.js');
+const { jwtSign } = require('../../config/jwtConfig.js');
 
 // Function to get the users profile
 function getUserProfile (req, res) {
     try {
-        // Find the user with the given id
-        User.findById(req.user.id)
+        // Find the user with the given userName
+        User.findOne({ userName: req.params.userName })
         .then((user) => {
             if (!user) {
                 return res.status(404).json({ message: 'No account found' });

@@ -9,7 +9,7 @@ const User = require('../models/userSchema.js');
 const Image = require('../models/imageSchema.js');
 
 const emailController = require('./emailController.js');
-const publicProfileController = require('./publicProfileController.js');
+const publicProfileController = require('./settings/publicProfileController.js');
 
 const { jwtSign } = require('../config/jwtConfig.js');
 

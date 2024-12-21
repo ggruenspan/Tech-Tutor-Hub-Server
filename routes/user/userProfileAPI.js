@@ -1,9 +1,9 @@
 // routes/settingsAPI.js
 
 const express = require('express');
-const authenticateToken = require('../middleware/authenticateToken.js');
+const authenticateToken = require('../../middleware/authenticateToken.js');
 // const upload = require('../config/multerConfig.js');
-const userControllers = require('../controllers/userControllers.js');
+const userControllers = require('../../controllers/user/userProfileControllers.js');
 const router = express.Router();
 
 

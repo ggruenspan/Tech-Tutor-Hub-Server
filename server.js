@@ -35,6 +35,7 @@ app.use(localTimeMiddleware);
 
 // API routes
 app.use('/', require('./routes/authAPI'));
+app.use('/', require('./routes/core/becomeATutorAPI.js'));
 app.use('/', require('./routes/settings/publicProfileAPI.js'));
 app.use('/', require('./routes/user/userProfileAPI.js'));
 

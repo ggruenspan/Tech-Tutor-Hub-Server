@@ -28,67 +28,92 @@ The application is planned to be Dockerized to ensure scalability and easy deplo
 
 To get started with the development of Tech Tutor Hub server-side, follow these steps:
 
-1. Clone the repository:
+### 1️⃣ Clone the repository:
 
    ```bash
    git clone https://github.com/ggruenspan/tech-tutor-hub-server.git
    cd tech-tutor-hub-server
-    ```
-2. Install Dependencies
-    ```bash
-    # Install dependencies
-    npm install
-    ```
-You need to run the application on HTTPS. To achieve this, follow these steps from [Medium.com]:
-1. First, open PowerShell as administrator
-    Run
-    ```bash
-    Get-ExecutionPolicy 
-    ```
-    If it returns Restricted, then run 
-    ```bash
-    Set-ExecutionPolicy AllSigned or Set-ExecutionPolicy Bypass -Scope Process.
-    ```
-2. Run this command to install Chocolatey
-    ```bash
-    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-    ```
-3. After install Chocolatey, we can install mkcert using
-    ```bash
-    choco install mkcert
-    ```
-4. Now we create a trusted certificate authority in our system’s root store
-    ```bash
-    mkcert -install
-    ```
-5. Run this to valid HTTPS certificates for localhost
-    ```bash
-    # Create a folder in the main directory called 'ssl'
-    mkcert localhost
-    ```
-6. Download the Client Repository:
+   ```
+
+### 2️⃣ Install Dependencies
+
+   ```bash
+   npm install
+   ```
+
+## 🚨 Environment Configuration (Required)
+Before running the application, you must create a `.env` file in the project root directory.  
+The application **will not run** unless this file is created and contains the necessary secrets and credentials.
+
+Your `.env` file should include:
+
+   ```plaintext
+   MONGODB_CONN_STR=your_mongodb_connection_string
+   PORT=8080
+   JWT_SECRET=your_jwt_secret
+   SESSION_SECRET=your_secret_key
+   CRYPTO_SECRET=your_crypto_secret
+   EMAIL_USER=your_email_user
+   EMAIL_PASSWORD=your_email_password
+   ```
+
+Make sure to replace the placeholder values with your actual database credentials and security secrets.
+
+## 🔒 Running the Application on HTTPS
+To run the application on HTTPS, follow these steps from [Medium.com]:
+
+1. Open **PowerShell** as administrator and check the execution policy:
+   ```bash
+   Get-ExecutionPolicy 
+   ```
+   If it returns **Restricted**, then run:
+   ```bash
+   Set-ExecutionPolicy AllSigned or Set-ExecutionPolicy Bypass -Scope Process.
+   ```
+2. Install **Chocolatey**:
+   ```bash
+   Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+   ```
+3. Install **mkcert** using Chocolatey:
+   ```bash
+   choco install mkcert
+   ```
+4. Create a trusted certificate authority in your system’s root store:
+   ```bash
+   mkcert -install
+   ```
+5. Generate valid HTTPS certificates for localhost:
+   ```bash
+   # Create a folder in the main directory called 'ssl'
+   mkcert localhost
+   ```
+
+## 🎨 Download the Client Repository:
 
 To complete the application, you'll need to download and set up the client side of Tech Tutor Hub. Follow the instructions in the [Client Repository] to get started.
 
-6. Run the application
-    ```bash
-    # Make sure you have your .env file in the same folder
-    cd server
-    npm run devStart
-    ```
+## ▶️ Running the Application
 
-## License
+Once the `.env` file is set up, you can start the server:
+
+   ```bash
+   # Make sure you have your .env file in the same folder
+   cd server
+   npm run devStart
+   ```
+
+## 📜 License
 
 MIT
 
-**Free Software, Hell Yeah!**
+**Free Software, Hell Yeah!** 🚀
 
-   [Node.js]: <http://nodejs.org>
-   [Express]: <https://expressjs.com/>
-   [Body-Parser]: <https://www.npmjs.com/package/body-parser>
-   [Cors]: <https://www.npmjs.com/package/cors>
-   [Passport]: <https://www.passportjs.org/>
-   [Express-Session]: <https://www.npmjs.com/package/express-session>
-   [MongoDB]: <https://www.mongodb.com/>
-   [Medium.com]: <https://medium.com/@tuanhuyngt/using-https-in-development-with-react-js-5388bf7278de>
-   [Client Repository]: <https://github.com/ggruenspan/Tech-Tutor-Hub-Client>
+[Node.js]: <http://nodejs.org>  
+[Express]: <https://expressjs.com/>  
+[Body-Parser]: <https://www.npmjs.com/package/body-parser>  
+[Cors]: <https://www.npmjs.com/package/cors>  
+[Passport]: <https://www.passportjs.org/>  
+[Express-Session]: <https://www.npmjs.com/package/express-session>  
+[MongoDB]: <https://www.mongodb.com/>  
+[Medium.com]: <https://medium.com/@tuanhuyngt/using-https-in-development-with-react-js-5388bf7278de>  
+[Client Repository]: <https://github.com/ggruenspan/Tech-Tutor-Hub-Client>  

@@ -12,6 +12,7 @@ Tech Tutor Hub is an ongoing project aimed at developing a web application that 
   - [Passport] - Express-compatible authentication middleware for Node.js.
   - [Express-Session] - Session middleware for Express.
   - [MongoDB] - A NoSQL database used for storing and retrieving user information.
+  - [Google Cloud] - Utilized for file uploads and integrations, leveraging the Google Drive API for seamless file storage.
 
 ## Features
 - **Secure Authentication:**
@@ -45,6 +46,8 @@ To get started with the development of Tech Tutor Hub server-side, follow these 
 Before running the application, you must create a `.env` file in the project root directory.  
 The application **will not run** unless this file is created and contains the necessary secrets and credentials.
 
+**⚠️ Important:** The `.env` file provided here is just a shell to indicate required secrets and credentials. It is your responsibility to replace placeholder values with actual, secure secrets.
+
 Your `.env` file should include:
 
    ```plaintext
@@ -57,7 +60,8 @@ Your `.env` file should include:
    EMAIL_PASSWORD=your_email_password
    ```
 
-Make sure to replace the placeholder values with your actual database credentials and security secrets.
+### Google Credentials
+In addition to the `.env` file, ensure that a `GOOGLE_CREDENTIALS.json` file is present in the `config` directory. This file contains the service account credentials required for Google Drive API integration. The absence of this file will cause errors in the application when attempting to upload files to Google Drive.
 
 ## 🔒 Running the Application on HTTPS
 To run the application on HTTPS, follow these steps from [Medium.com]:
@@ -115,5 +119,6 @@ MIT
 [Passport]: <https://www.passportjs.org/>  
 [Express-Session]: <https://www.npmjs.com/package/express-session>  
 [MongoDB]: <https://www.mongodb.com/>  
+[Google Cloud]: <https://cloud.google.com/>  
 [Medium.com]: <https://medium.com/@tuanhuyngt/using-https-in-development-with-react-js-5388bf7278de>  
 [Client Repository]: <https://github.com/ggruenspan/Tech-Tutor-Hub-Client>  

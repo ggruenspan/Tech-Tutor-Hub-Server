@@ -15,7 +15,6 @@ const User = mongoose.model(
             validated: {type: Boolean, default: false}
         },
         account: {
-            completed: {type: Boolean, default: false},
             firstName: String,
             lastName: String,
             phoneNumber: String,

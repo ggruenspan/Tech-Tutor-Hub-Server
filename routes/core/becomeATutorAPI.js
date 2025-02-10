@@ -3,6 +3,8 @@
 const express = require('express');
 const authenticateToken = require('../../middleware/authenticateToken.js');
 const becomeATutorController = require('../../controllers/core/becomeATutorController.js');
+const upload = require('../../config/multerConfig.js');
+const uploadController = require('../../config/googleDriveConfig.js');
 const router = express.Router();
 
 // Route for checking if user exists by email before becoming a tutor
@@ -40,6 +42,9 @@ router.get('/get-languages', (req, res) => {
     becomeATutorController.getLanguages(req, res);
 });
 
-
-
+// Route for uploading the users verification video
+router.post('/upload-verification-video', upload.single('video'), (req, res) => {
+    uploadController.uploadToGoogleDrive(req, res);
+});
+     
 module.exports = router;

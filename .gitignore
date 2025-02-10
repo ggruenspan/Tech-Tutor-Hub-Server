@@ -4,3 +4,4 @@ node_modules
 #Assets
 .env
 /ssl
+/config/GOOGLE_CREDENTIALS.json

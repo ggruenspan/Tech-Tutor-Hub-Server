@@ -38,6 +38,7 @@ const User = mongoose.model(
                 timeZone: String,
             },
         },
+        tutor: { type: String, ref: "Tutor" },
         loginHistory: [{
             _id: false,
             dateTime: Date,

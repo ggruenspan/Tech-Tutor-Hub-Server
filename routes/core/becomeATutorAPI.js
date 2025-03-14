@@ -1,7 +1,7 @@
 // routes/settingsAPI.js
 
 const express = require('express');
-const authenticateToken = require('../../middleware/authenticateToken.js');
+// const authenticateToken = require('../../middleware/authenticateToken.js');
 const becomeATutorController = require('../../controllers/core/becomeATutorController.js');
 const upload = require('../../config/multerConfig.js');
 const uploadController = require('../../config/googleDriveConfig.js');
@@ -43,8 +43,13 @@ router.get('/get-languages', (req, res) => {
 });
 
 // Route for uploading the users verification video
-router.post('/upload-verification-video', upload.single('video'), (req, res) => {
+router.post('/upload-verification-video', upload.fields([{ name: 'video', maxCount: 1 },{ name: 'file', maxCount: 1 }]), (req, res) => {
     uploadController.uploadToGoogleDrive(req, res);
 });
-     
+
+// Route for creating a new tutor
+router.post('/create-new-tutor', upload.fields([{ name: 'file', maxCount: 1 },{ name: 'video', maxCount: 1 }]), (req, res) => {
+    becomeATutorController.createNewTutor(req, res);
+});
+
 module.exports = router;

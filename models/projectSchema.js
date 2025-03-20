@@ -2,19 +2,20 @@
 
 const mongoose = require('mongoose');
 
+// Define the Project model with a schema
 const project = mongoose.model(
     "Projects",
     new mongoose.Schema({
-        user: { type: String, ref: 'Users' },
-        name: String,
-        desc: String,
+        user: { type: String, ref: 'Users' }, // Reference to the Users collection
+        name: String, // Project name
+        desc: String, // Project description
         img: {
-            data: Buffer,
-            contentType: String
+            data: Buffer, // Image data
+            contentType: String // Image content type
         },
-        url: String
+        url: String // Project URL
     }, {
-        versionKey: false
+        versionKey: false // Disable the __v version key
     })
 );
 

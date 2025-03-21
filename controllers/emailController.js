@@ -28,7 +28,7 @@ function sendResetPasswordEmail(email, firstName, resetToken) {
                     <p><a href="${resetPasswordLink}"><strong>Reset Password</strong></a></p>
                     <p><strong>This link is valid for 1 hour.</strong> If you do not reset your password within this time, the link will expire, and you will need to request another reset link.</p>
                     <p>If you did not request this, please disregard this email, and your password will remain unchanged.</p>
-                    <p>Best regards,<br>Your Company Name Team</p>
+                    <p>Best regards,<br>Tech Tutor Hub</p>
                 `
         };
 
@@ -67,7 +67,7 @@ function sendVerificationEmail(email, firstName, verificationToken) {
                     <p><strong>This link is valid for 1 hour.</strong> If you do not verify your email within this time, your account will be automatically deleted, and you will need to register again.</p>
                     <p>If you did not create this account, please disregard this email. If you have any concerns or suspect that your email address may be compromised, we strongly recommend contacting our support team for assistance.</p>
                     <p>Your security is our priority, and we're here to help you secure your account.</p>
-                    <p>Best regards,<br>Your Company Name Team</p>
+                    <p>Best regards,<br>Tech Tutor Hub</p>
                 `
         };
 

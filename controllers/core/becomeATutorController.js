@@ -324,6 +324,59 @@ function createNewTutor(req, res) {
     }
 }
 
+// Function to get a tutors testimonial
+function getTestimonials(req, res) {
+    try {
+        // Find all tutors that have a testimonial
+        Tutor.find({ testimonial: { $exists: true, $ne: null } })
+            .then((tutors) => {
+                if (!tutors || tutors.length === 0) {
+                    return res.status(404).json({ message: 'No testimonials available at the moment.' });
+                }
+
+                // Fetch user details for each tutor
+                const userPromises = tutors.map(tutor => 
+                    User.findById(tutor.user).select('profile.profileImage account.firstName account.lastName')
+                );
+
+                Promise.all(userPromises)
+                    .then(users => {
+                        // Fetch profile images for each user
+                        const imagePromises = users.map(user => 
+                            Image.findById(user.profile.profileImage).select('img.data img.contentType')
+                        );
+
+                        Promise.all(imagePromises)
+                            .then(images => {
+                                // Extract testimonials and user details
+                                const testimonials = tutors.map((tutor, index) => ({
+                                    tutorId: tutor._id,
+                                    testimonial: tutor.testimonial,
+                                    tutorName: `${users[index].account.firstName} ${users[index].account.lastName}`,
+                                    profileImage: images[index] ? {
+                                        data: images[index].img.data.toString('base64'), // Encode image data to Base64
+                                        contentType: images[index].img.contentType
+                                    } : null
+                                }));
+
+                                res.status(200).json({ testimonials });
+                            })
+                            .catch((err) => {
+                                res.status(500).json({ message: 'An error occurred while fetching profile images. Please try again later.' });
+                            });
+                    })
+                    .catch((err) => {
+                        res.status(500).json({ message: 'An error occurred while fetching user details. Please try again later.' });
+                    });
+            })
+            .catch((err) => {
+                res.status(500).json({ message: 'An error occurred while fetching testimonials. Please try again later.' });
+            });
+    } catch (err) {
+        res.status(500).json({ message: 'Internal server error. Please try again later.' });
+    }
+}
+
 // Export the controller functions
 module.exports = { 
     checkUserByEmail,
@@ -331,5 +384,6 @@ module.exports = {
     getSubjects,
     addLanguages,
     getLanguages,
-    createNewTutor
+    createNewTutor,
+    getTestimonials
 }

@@ -52,4 +52,9 @@ router.post('/create-new-tutor', upload.fields([{ name: 'file', maxCount: 1 },{ 
     becomeATutorController.createNewTutor(req, res);
 });
 
+// Route for updating a tutor's testimonial
+router.get('/get-testimonials', (req, res) => {
+    becomeATutorController.getTestimonials(req, res);
+});
+
 module.exports = router;

@@ -190,7 +190,7 @@ function getLanguages(req, res) {
 // Function to create a new tutor
 function createNewTutor(req, res) {
     try {
-        const { fullName, email, password, bio, pronouns, availability, subjects, hourlyRate, teachingMode, languages } = req.body;
+        const { fullName, email, password, bio, pronouns } = req.body;
 
         // Check if a user with the given email already exists
         User.findOne({ "email.address": email })
@@ -265,19 +265,9 @@ function createNewTutor(req, res) {
         }
         
         function saveTutor(user, sendVerificationEmail) {
-            // Parse incoming JSON data
-            const parsedAvailability = JSON.parse(availability);
-            const parsedSubjects = JSON.parse(subjects);
-            const parsedLanguages = JSON.parse(languages);
-        
             // Create Tutor entry with pending approval status
             const newTutor = new Tutor({
                 user: user._id,  // Associate tutor with user
-                availability: parsedAvailability,
-                subjects: parsedSubjects,
-                hourlyRate,
-                teachingMode,
-                languages: parsedLanguages,
                 approvalStatus: 'pending'  // Default to pending
             });
         

@@ -7,6 +7,7 @@ const passport = require('passport');
 const session = require('express-session');
 const https = require('https');
 const fs = require('fs');
+const path = require('path');
 const app = express();
 
 const localTimeMiddleware = require('./middleware/getLocalTime.js');
@@ -33,11 +34,20 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(localTimeMiddleware);
 
-// API routes
-app.use('/', require('./routes/authAPI'));
-app.use('/', require('./routes/core/becomeATutorAPI.js'));
-app.use('/', require('./routes/settings/publicProfileAPI.js'));
-app.use('/', require('./routes/user/userProfileAPI.js'));
+// Dynamically load all routes
+const routesPath = path.join(__dirname, 'routes');
+function loadRoutes(dir) {
+    fs.readdirSync(dir).forEach(file => {
+        const fullPath = path.join(dir, file);
+        if (fs.statSync(fullPath).isDirectory()) {
+            loadRoutes(fullPath); // Recursively load subdirectories
+        } else if (file.endsWith('.js')) {
+            const route = require(fullPath);
+            app.use('/', route); // Adjust the base path if needed
+        }
+    });
+}
+loadRoutes(routesPath);
 
 // Path to your SSL certificate and key
 const options = {

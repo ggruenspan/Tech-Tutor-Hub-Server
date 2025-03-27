@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 
-// User & Subject models (Mongoose schema)
+// Models (Mongoose schema)
 const User = require('../../models/userSchema.js');
 const Tutor = require('../../models/tutorSchema.js');
 const Image = require('../../models/imageSchema.js');

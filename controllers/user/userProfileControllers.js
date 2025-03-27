@@ -1,6 +1,6 @@
 // controllers/settingsControllers.js
 
-// User & Image models (Mongoose schema)
+// Models (Mongoose schema)
 const User = require('../../models/userSchema.js');
 const Image = require('../../models/imageSchema.js');
 const Project = require('../../models/projectSchema.js');

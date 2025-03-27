@@ -1,12 +1,10 @@
-// routes/settingsAPI.js
+// routes/publicProfileAPI.js
 
 const express = require('express');
 const authenticateToken = require('../../middleware/authenticateToken.js');
 const upload = require('../../config/multerConfig.js');
 const publicProfileController = require('../../controllers/settings/publicProfileController.js');
 const router = express.Router();
-
-// ----------------------------------------- Public Profile Page Start -------------------------------------------------------
 
 // Route for getting the user data
 router.get('/get-public-profile', authenticateToken, (req, res) => {
@@ -37,7 +35,5 @@ router.post('/upload-profile-picture', authenticateToken, upload.single('profile
 router.delete('/remove-profile-image', authenticateToken, (req, res) => {
     publicProfileController.removeProfileImage(req, res);
 });
-
-// ----------------------------------------- Public Profile Page End -------------------------------------------------------
 
 module.exports = router;
